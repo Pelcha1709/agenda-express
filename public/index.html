@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agenda - Express</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body
+  <div class="contenedor">
+    <h1>Agenda de Contactos</h1>
+
+    <form id="formContacto">
+      <input type="text" id="nombre" placeholder="Nombre" required />
+      <input type="text" id="apellido" placeholder="Apellido" required />
+      <input type="text" id="telefono" placeholder="Teléfono" required />
+      <button type="submit">Guardar contacto</button>
+    </form>
+
+    <p id="estado"></p>
+
+    <h2>Contactos</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Apellido</th>
+          <th>Teléfono</th>
+        </tr>
+      </thead>
+      <tbody id="listaContactos"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById('formContacto');
+    const lista = document.getElementById('listaContactos');
+    const estado = document.getElementById('estado');
+
+    async function cargarContactos() {
+      const res = await fetch('/contactos');
+      const data = await res.json();
+      lista.innerHTML = '';
+
+      if (Array.isArray(data)) {
+        data.forEach((c) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${c.nombre ?? ''}</td><td>${c.apellido ?? ''}</td><td>${c.telefono ?? ''}</td>`;
+          lista.appendChild(tr);
+        });
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      estado.textContent = 'Guardando...';
+
+      const payload = {
+        nombre: document.getElementById('nombre').value,
+        apellido: document.getElementById('apellido').value,
+        telefono: document.getElementById('telefono').value
+      };
+
+      const res = await fetch('/contactos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      estado.textContent = res.ok ? 'Contacto guardado.' : (result.error || 'Error al guardar.');
+
+      if (res.ok) {
+        form.reset();
+        cargarContactos();
+      }
+    });
+
+    cargarContactos();
+  </script>
+</body>
+</html>
